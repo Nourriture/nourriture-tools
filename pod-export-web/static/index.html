@@ -10,51 +10,64 @@
     <div>
         <div>
             <p>
-                <input name="search" />
-                <input type="submit" value="Search" />
+                <input name="search" data-bind="value: searchTerm"/>
+                <input type="submit" value="Search" data-bind="click: search" />
+                <input type="checkbox" data-bind="checked: quickModeEnabled" />
+                <span>Quick</span>
             </p>
         </div>
         <div>
             <p>
-                <span>Name contains:</span>
-                <input type="radio" checked />
-                <span>Name exact:</span>
-                <input type="radio" />
-                <span>Category:</span>
-                <input type="radio" />
+                <input type="radio" value="name" data-bind="checked: searchField" />
+                <span>Name contains</span>
+                <input type="radio" value="ename" data-bind="checked: searchField" />
+                <span>Name exact</span>
+                <input type="radio" value="category" data-bind="checked: searchField"  />
+                <span>Category</span>
             </p>
         </div>
     </div>
     <hr />
     <div>
-        <table>
-            <thead>
-            <td></td>
-            <td>Name</td>
-            <td>Category</td>
-            <td>Company</td>
-            <td>Calories</td>
-            <td>Carbs</td>
-            <td>Protein</td>
-            <td>Fat</td>
-            </thead>
-            <tbody>
-            <tr>
-                <td><img src="http://9la.dk/img/product/gtin-003/0033383000053.jpg" /></td>
-                <td>Red Delicious WAXF 2 1/4\" 3lb</td>
-                <td>Apple</td>
-                <td>8RB56Z</td>
-                <td>130</td>
-                <td>34</td>
-                <td>1</td>
-                <td>0</td>
-            </tr>
-            </tbody>
-        </table>
-        <div style="display:none">
-            <p>No results found</p>
+        <div data-bind="visible: searching">
+            <p>Searching, please wait ...</p>
+        </div>
+        <div data-bind="if: !quickModeEnabled() && !searching()">
+            <table>
+                <thead>
+                <td></td>
+                <td>Name</td>
+                <td>Category</td>
+                <td>Company</td>
+                <td>Calories</td>
+                <td>Carbs</td>
+                <td>Protein</td>
+                <td>Fat</td>
+                </thead>
+                <tbody data-bind="foreach: searchResults">
+                <tr>
+                    <td><img data-bind="attr:{src: $data.picture }" /></td>
+                    <td data-bind="text: $data.name"></td>
+                    <td data-bind="text: $data.category"></td>
+                    <td data-bind="text: $data.bsin"></td>
+                    <td data-bind="text: $data.calories"></td>
+                    <td data-bind="text: $data.carbs"></td>
+                    <td data-bind="text: $data.protein"></td>
+                    <td data-bind="text: $data.fat"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div data-bind="if: quickModeEnabled() && !searching()">
+            <p><span data-bind="text: searchResults().length">0</span> items found.</p>
         </div>
     </div>
+    <div style="display:none">
+        <p>No results found</p>
+    </div>
 </div>
+<script src="jquery.js"></script>
+<script src="knockout-latest.debug.js"></script>
+<script src="scripts/main.js"></script>
 </body>
 </html>
