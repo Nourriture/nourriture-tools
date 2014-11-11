@@ -27,11 +27,14 @@ module.exports = function(pichost, outpath) {
             if(res.statusCode == 200) {
                 res.setEncoding('utf8');
                 res.on('data', function (data) {
+                    var result = null;
+                    var resultErr = null;
                     try {
-                        callback(null, JSON.parse(data).result)
+                        result = JSON.parse(data).result;
                     } catch (err) {
-                        callback(new Error("Response parsing failed: " + err.message));
+                        resultErr = new Error("Response parsing failed: " + err.message);
                     }
+                    callback(resultErr, result);
                 });
             } else {
                 callback(new Error("Server returned status code: " + res.statusCode));
@@ -53,7 +56,7 @@ module.exports = function(pichost, outpath) {
     };
 
     // Main query function
-    var query = function (expr, keyword, pichost, outpath, quick, callback) {
+    var query = function (expr, keyword, pichost, outpath, quick, queryDone) {
         // Do "waterfall" of queries to Mingle.io
         async.waterfall(
             [
@@ -69,7 +72,7 @@ module.exports = function(pichost, outpath) {
                                 if(!quick) {
                                     callback(null, res);
                                 } else {
-                                    callback(new Error("LOOKUP"));
+                                    callback(new Error("LOOKUP"), res);
                                 }
                             } else {
                                 callback(Error('Problem with basic product query: ' + err.message));
@@ -270,11 +273,19 @@ module.exports = function(pichost, outpath) {
                                 console.log("Exported data written to files.");
                                 console.log("\tProducts: " + productsPath);
                                 console.log("\tCompanies: " + companiesPath);
+
+                                if(queryDone) {
+                                    queryDone({
+                                        "products": products,
+                                        "companies": companies
+                                    });
+                                }
                             }
                         });
                 } else {
                     if(err.message == "LOOKUP")  {
                         console.log("Quick lookup flag (-q) set, terminating early before real export");
+                        if(queryDone) queryDone(products);
                     } else {
                         console.log("Aborted overall query operation due to fetal error: " + err.message);
                     }
