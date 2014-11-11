@@ -92,7 +92,7 @@ async.waterfall(
                             callback(new Error("LOOKUP"));
                         }
                     } else {
-                        throw new Error('Problem with basic product query: ' + err.message);
+                        callback(Error('Problem with basic product query: ' + err.message));
                     }
                 }
             );
@@ -109,6 +109,7 @@ async.waterfall(
                         if(res.statusCode == 200) {
                             imgProducts.push({ gtin: gtin, picture:url});
                         } else {
+                            console.log("\tNo image found for product (GTIN: " + gtin + ") discarding.");
                         }
                         productDone()
                     });
@@ -141,13 +142,17 @@ async.waterfall(
                         },
                         function(err, res) {
                             if(!err) {
-                                var result = res[0];
-                                product.calories =  result["n.CAL"];
-                                product.carbs =     result["n.TOT_CARB_G"];
-                                product.protein =   result["n.PROTEIN_G"];
-                                product.fat =       result["n.TOT_FAT_G"];
+                                if(res.length > 0){
+                                    var result = res[0];
+                                    product.calories =  result["n.CAL"];
+                                    product.carbs =     result["n.TOT_CARB_G"];
+                                    product.protein =   result["n.PROTEIN_G"];
+                                    product.fat =       result["n.TOT_FAT_G"];
+                                } else {
+                                    console.log("\tNo nutritional data found (GTIN: " + product.gtin + ")");
+                                }
                             } else {
-                                console.log('Problem with nutritional query: ' + err.message);
+                                console.log('\tProblem with nutritional query (GTIN: ' + product.gtin + '): ' + err.message);
                             }
                             productDone();
                         }
@@ -175,12 +180,16 @@ async.waterfall(
                         },
                         function(err, res) {
                             if(!err) {
-                                var result = res[0];
-                                product.category =  result["g.PRODUCT_LINE"];
-                                product.bsin =     result["g.BSIN"];
-                                product.name =   result["g.GTIN_NM"];
+                                if(res.length > 0) {
+                                    var result = res[0];
+                                    product.category =  result["g.PRODUCT_LINE"];
+                                    product.bsin =     result["g.BSIN"];
+                                    product.name =   result["g.GTIN_NM"];
+                                } else {
+                                    console.log("\tNo meta-data data found (GTIN: " + product.gtin + ")");
+                                }
                             } else {
-                                console.log('Problem with meta-data query: ' + err.message);
+                                console.log('\tProblem with meta-data query (GTIN: ' + product.gtin + '): ' + err.message);
                             }
                             productDone();
                         }
@@ -214,15 +223,17 @@ async.waterfall(
                             },
                             function(err, res) {
                                 if(!err) {
-                                    var result = res[0];
-                                    var company = {
-                                        bsin: product.bsin,
-                                        name: result["g.BRAND_NM"],
-                                        website: result["g.BRAND_LINK"]
-                                    };
+                                    var company = { bsin: product.bsin };
+                                    if(res.length > 0) {
+                                        var result = res[0];
+                                        company.name = result["g.BRAND_NM"];
+                                        company.website = result["g.BRAND_LINK"];
+                                    } else {
+                                        console.log("\tNo company meta-data found (BSIN: " + product.bsin + ")");
+                                    }
                                     companies.push(company);
                                 } else {
-                                    console.log('Problem with company query: ' + err.message);
+                                    console.log('\tProblem with company meta-data query (BSIN: ' + product.bsin + '): ' + err.message);
                                 }
                                 productDone();
                             }
@@ -285,7 +296,7 @@ function(err, products, companies) {
         if(err.message == "LOOKUP")  {
             console.log("Quick lookup flag (-q) set, terminating early before real export");
         } else {
-            console.log(err);
+            console.log("Aborted overall query operation due to fetal error: " + err.message);
         }
     }
 });
