@@ -252,38 +252,28 @@ module.exports = function(pichost, outpath) {
                 if(!err) {
                     // Cache results in outdir and return after
                     console.log("Export completed successfully! Writing to files ...");
-                    var productsPath = outpath + "/" + keyword + ".json";
-                    var companiesPath = outpath + "/" + keyword + "-companies.json";
-                    async.parallel([
-                            // Write PRODUCTS to file
-                            function(done) {
-                                fs.writeFile(productsPath, JSON.stringify(products), function(err) {
-                                    if(!err) {
-                                        done();
-                                    } else {
-                                        console.log("Failed to write to file: " + err.message);
-                                        done(err);
-                                    }
-                                });
-                            },
-                            // Write COMPANIES to file
-                            function(done) {
-                                fs.writeFile(companiesPath, JSON.stringify(companies), function(err) {
-                                    if(!err) {
-                                        done();
-                                    } else {
-                                        console.log("Failed to write to file: " + err.message);
-                                        done(err);
-                                    }
-                                });
-                            }
-                        ],
-                        // Finally respond to original callback
+                    var outputPlan = [
+                        { data: products, targetPath: outpath + "/" + keyword + ".json" },
+                        { data: companies, targetPath: outpath + "/" + keyword + "-companies.json" }
+                    ];
+                    async.each(outputPlan,
+                        // Write each collection to output
+                        function(task, taskDone) {
+                            fs.writeFile(task.targetPath, JSON.stringify(task.data), function(err) {
+                                if(!err) {
+                                    taskDone();
+                                } else {
+                                    console.log("Failed to write to file: " + err.message);
+                                    taskDone(err);
+                                }
+                            });
+                        },
+                        // Finally respond to original callback, even if caching failed
                         function(err) {
                             if(!err) {
                                 console.log("Exported data written to files.");
-                                console.log("\tProducts: " + productsPath);
-                                console.log("\tCompanies: " + companiesPath);
+                                console.log("\tProducts: " + outputPlan[0].targetPath);
+                                console.log("\tCompanies: " + outputPlan[1].targetPath);
                             } else {
                                 console.log("WARNING: Error occurred when attempting to persist result to disk:" + err);
                                 // NOTE: Returns result anyway
