@@ -201,39 +201,32 @@ module.exports = function(pichost, outpath) {
                 // Retrieve company meta-data
                 function(products, callback) {
                     var companies = [];
-                    async.eachSeries(products,          // NOTE: Would love to do in parallel, but difficult when we want to ensure no company is queried twice
+                    var prodsWithUniqCompany = _.uniq(products, 'bsin'); // Only take one product for each company (ensuring no company is queried twice)
+                    async.each(prodsWithUniqCompany,
                         // For each product, get company meta-data
                         function(product, productDone) {
-                            // Only make query if we don't have the company already
-                            var companyExists = _.any(companies, function(company) {
-                                return company.bsin == product.bsin;
-                            });
-                            if(!companyExists) {
-                                mingleQuery({
-                                        expr: '[ {g.BRAND_NM, g.BRAND_LINK} | g <~ pod.brand, g.BSIN =~ "' + product.bsin + '" ]',
-                                        limit: 1
-                                    },
-                                    function(err, res) {
-                                        if(!err) {
-                                            var company = { bsin: product.bsin };
-                                            if(res.length > 0) {
-                                                var result = res[0];
-                                                company.name = result["g.BRAND_NM"];
-                                                company.website = result["g.BRAND_LINK"];
-                                            } else {
-                                                console.log("\tNo company meta-data found (BSIN: " + product.bsin + ")");
-                                            }
-                                            companies.push(company);
+                            mingleQuery({
+                                    expr: '[ {g.BRAND_NM, g.BRAND_LINK} | g <~ pod.brand, g.BSIN =~ "' + product.bsin + '" ]',
+                                    limit: 1
+                                },
+                                function(err, res) {
+                                    if(!err) {
+                                        var company = { bsin: product.bsin };
+                                        if(res.length > 0) {
+                                            var result = res[0];
+                                            company.name = result["g.BRAND_NM"];
+                                            company.website = result["g.BRAND_LINK"];
                                         } else {
-                                            console.log('\tProblem with company meta-data query (BSIN: ' + product.bsin + '): ' + err.message);
+                                            console.log("\tNo company meta-data found (BSIN: " + product.bsin + ")");
                                         }
+                                        companies.push(company);
                                         productDone();
+                                    } else {
+                                        console.log('\tProblem with company meta-data query (BSIN: ' + product.bsin + '): ' + err.message);
+                                        productDone(err)
                                     }
-                                );
-                            } else {
-                                // Company already known, skipping
-                                productDone();
-                            }
+                                }
+                            );
                         },
                         // When done (..or error)
                         function(err) {
@@ -241,6 +234,7 @@ module.exports = function(pichost, outpath) {
                                 console.log("Relevant company meta-data retrieved (" + companies.length + " companies for " + products.length + " products)");
                                 callback(null, products, companies);
                             } else {
+                                console.log("Failed to retrieve relevant company meta-data, aborting");
                                 callback(err);
                             }
                         }
