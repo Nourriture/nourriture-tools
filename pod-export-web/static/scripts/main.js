@@ -20,7 +20,7 @@ function MainViewModel() {
         self.searching(true);
         $.get(url, null, function(result) {
             self.searching(false);
-            self.searchResults(result);
+            self.searchResults(result.products);
         });
     };
 

@@ -56,7 +56,7 @@ module.exports = function(pichost, outpath) {
     };
 
     // Main query function
-    var query = function (expr, keyword, pichost, outpath, quick, queryDone) {
+    var webQuery = function (expr, keyword, pichost, outpath, quick, queryDone) {
         // Do "waterfall" of queries to Mingle.io
         async.waterfall(
             [
@@ -294,6 +294,10 @@ module.exports = function(pichost, outpath) {
                 } else {
                     if(err.message == "LOOKUP")  {
                         console.log("Quick lookup flag (-q) set, terminating early before real export");
+                        var result = {
+                            products: products,
+                            companies: []
+                        };
                         if(queryDone) queryDone(products);
                     } else {
                         console.log("Aborted overall query operation due to fetal error: " + err.message);
@@ -301,6 +305,49 @@ module.exports = function(pichost, outpath) {
                 }
             }
         );
+    };
+
+    // Check if data for a keyword is already in our local file cache
+    var isInCache = function(keyword, cachedir, callback) {
+        fs.readdir(cachedir, function(err, files) {
+            if(!err) {
+                var cached = _.find(files, function(item) {
+                    //return item.indexOf(keyword) != -1;
+                    return (item.indexOf(keyword)) != -1 && (item.indexOf("companies") == -1);
+                });
+                callback(null, cached);
+            } else {
+                callback(err);
+            }
+        });
+    };
+
+    var retrieveFromCache = function(keyword, cacheDir, callback) {
+        var result = {};
+        var cacheFile = cacheDir + "/" + keyword + ".json";
+        fs.readFile(cacheFile, null, function(err, data) {
+            if(!err) {
+                result.products = JSON.parse(data);
+                callback(result);
+            } else {
+                console.log("Error reading data from cache file (" + cacheFile + ")");
+            }
+        });
+    };
+
+    var query = function(expr, keyword, pichost, outpath, quick, callback) {
+        isInCache(keyword, outpath, function(err, cacheFile) {
+            if(!err) {
+                if(cacheFile) {
+                    console.log("Cache hit!");
+                    retrieveFromCache(keyword, outpath, callback);
+                } else {
+                    webQuery(keyword, field, quick, callback);
+                }
+            } else {
+                console.log("Error checking outdir (" + outdir + ") for cached files");
+            }
+        });
     };
 
     // Public API
