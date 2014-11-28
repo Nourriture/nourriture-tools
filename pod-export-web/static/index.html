@@ -33,34 +33,62 @@
             <p>Searching, please wait ...</p>
         </div>
         <div data-bind="if: !quickModeEnabled() && !searching()">
-            <table>
-                <thead>
-                <td></td>
-                <td>Name</td>
-                <td>Category</td>
-                <td>Company</td>
-                <td>Calories</td>
-                <td>Carbs</td>
-                <td>Protein</td>
-                <td>Fat</td>
-                <td></td>
-                </thead>
-                <tbody data-bind="foreach: searchResults">
-                <tr>
-                    <td><img data-bind="attr:{src: $data.picture }" /></td>
-                    <td data-bind="text: $data.name"></td>
-                    <td data-bind="text: $data.category"></td>
-                    <td data-bind="text: $data.bsin"></td>
-                    <td data-bind="text: $data.calories"></td>
-                    <td data-bind="text: $data.carbs"></td>
-                    <td data-bind="text: $data.protein"></td>
-                    <td data-bind="text: $data.fat"></td>
-                    <td>
-                        <a data-bind="click: $parent.copyItemToClipboard" href="" class="json-link-button">Show JSON</a>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
+            <div>
+                <h2>Products</h2>
+                <table>
+                    <thead>
+                    <tr>
+                        <td></td>
+                        <td>Name</td>
+                        <td>Category</td>
+                        <td>Company</td>
+                        <td>Calories</td>
+                        <td>Carbs</td>
+                        <td>Protein</td>
+                        <td>Fat</td>
+                        <td></td>
+                    </tr>
+                    </thead>
+                    <tbody data-bind="foreach: searchResults">
+                    <tr>
+                        <td><img src="" data-bind="attr:{src: $data.picture }" /></td>
+                        <td data-bind="text: $data.name"></td>
+                        <td data-bind="text: $data.category"></td>
+                        <td data-bind="text: $data.bsin"></td>
+                        <td data-bind="text: $data.calories"></td>
+                        <td data-bind="text: $data.carbs"></td>
+                        <td data-bind="text: $data.protein"></td>
+                        <td data-bind="text: $data.fat"></td>
+                        <td>
+                            <a data-bind="click: $parent.copyItemToClipboard" href="" class="json-link-button">Show JSON</a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <h2>Companies</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <td></td>
+                            <td>Name</td>
+                            <td>Website</td>
+                            <td></td>
+                        </tr>
+                    </thead>
+                    <tbody data-bind="foreach: searchResultsCompanies">
+                    <tr>
+                        <td><img src="" data-bind="attr:{src: $data.picture }" /></td>
+                        <td data-bind="text: $data.name"></td>
+                        <td data-bind="text: $data.website"></td>
+                        <td>
+                            <a data-bind="click: $parent.copyItemToClipboard" href="" class="json-link-button">Show JSON</a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
         <div data-bind="if: quickModeEnabled() && !searching()">
             <p><span data-bind="text: searchResults().length">0</span> items found.</p>
