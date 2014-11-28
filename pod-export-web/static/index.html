@@ -43,6 +43,7 @@
                 <td>Carbs</td>
                 <td>Protein</td>
                 <td>Fat</td>
+                <td></td>
                 </thead>
                 <tbody data-bind="foreach: searchResults">
                 <tr>
@@ -54,6 +55,9 @@
                     <td data-bind="text: $data.carbs"></td>
                     <td data-bind="text: $data.protein"></td>
                     <td data-bind="text: $data.fat"></td>
+                    <td>
+                        <a data-bind="click: $parent.copyItemToClipboard" href="" class="json-link-button">Show JSON</a>
+                    </td>
                 </tr>
                 </tbody>
             </table>

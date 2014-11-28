@@ -23,6 +23,14 @@ function MainViewModel() {
             self.searchResults(result);
         });
     };
+
+    self.copyItemToClipboard = function (item) {
+        delete item.gtin;
+        item.company = item.bsin;
+        delete item.bsin;
+        delete item.category;
+        window.prompt("Copy to clipboard: Ctrl+C, Enter", JSON.stringify(item));
+    }
 }
 
 ko.applyBindings(new MainViewModel());
