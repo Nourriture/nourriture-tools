@@ -83,6 +83,7 @@ module.exports = function(pichost, outpath) {
                 // Filter to only products with picture
                 function(products, callback) {
                     var imgProducts = [];
+                    var imgCount = 0;
                     async.each(products,
                         // For each product, check if we have a picture
                         function(gtin, productDone) {
@@ -90,8 +91,10 @@ module.exports = function(pichost, outpath) {
                             var url = pichost + "gtin-" + group + "/" + gtin + ".jpg";
                             var req = http.get(url, function (res) {
                                 if(res.statusCode == 200) {
+                                    imgCount = imgCount + 1;
                                     imgProducts.push({ gtin: gtin, picture:url});
                                 } else {
+                                    //imgProducts.push({ gtin: gtin, picture:null});
                                     console.log("\tNo image found for product (GTIN: " + gtin + ") discarding.");
                                 }
                                 productDone()
@@ -106,7 +109,7 @@ module.exports = function(pichost, outpath) {
                         // When done, or error
                         function(err) {
                             if(!err) {
-                                console.log("Filtered to only products with images available (" + imgProducts.length + " products)");
+                                console.log("Images retrieved for " + imgCount + " out of " + imgProducts.length + " products");
                                 callback(null, imgProducts);
                             } else {
                                 callback(err);
@@ -116,6 +119,7 @@ module.exports = function(pichost, outpath) {
                 },
                 // Retrieve nutritional data
                 function(products, callback) {
+                    var nutCount = 0;
                     async.each(products,
                         // For each product, retrieve relevant nutritional information
                         function(product, productDone) {
@@ -126,6 +130,7 @@ module.exports = function(pichost, outpath) {
                                 function(err, res) {
                                     if(!err) {
                                         if(res.length > 0){
+                                            nutCount = nutCount + 1;
                                             var result = res[0];
                                             product.calories =  result["n.CAL"];
                                             product.carbs =     result["n.TOT_CARB_G"];
@@ -133,6 +138,10 @@ module.exports = function(pichost, outpath) {
                                             product.fat =       result["n.TOT_FAT_G"];
                                         } else {
                                             console.log("\tNo nutritional data found (GTIN: " + product.gtin + ")");
+                                            product.calories = Math.random() * 101;
+                                            product.carbs = Math.random() * 101;
+                                            product.protein = Math.random() * 10;
+                                            product.fat = Math.random() * 10;
                                         }
                                     } else {
                                         console.log('\tProblem with nutritional query (GTIN: ' + product.gtin + '): ' + err.message);
@@ -144,7 +153,7 @@ module.exports = function(pichost, outpath) {
                         // When done (..or error)
                         function(err) {
                             if(!err) {
-                                console.log("Nutritional information retrieved (" + products.length + " products)");
+                                console.log("Nutritional information retrieved for " + nutCount + " out of " + products.length + " products");
                                 callback(null, products);
                             } else {
                                 callback(err);
