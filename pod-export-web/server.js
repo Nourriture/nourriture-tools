@@ -38,9 +38,14 @@ app.get("/search/:field/:name", function(req, res) {
         var quick = JSON.parse(req.query["quick"]);
     }
 
-    exportFromPod(keyword, field, quick, function(result) {
-        res.set("Content-Type", "json/application");
-        res.send(result);
+    exportFromPod(keyword, field, quick, function(err, result) {
+        if(!err) {
+            res.set("Content-Type", "json/application");
+            res.send(result);
+        } else {
+            res.status(500);
+            res.send({ message: "Failed to retrieve due to an internal error" });
+        }
         res.end();
     });
 });

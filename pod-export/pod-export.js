@@ -55,7 +55,7 @@ module.exports = function(pichost, outpath) {
         req.end();
     };
 
-    // Main query function
+    // Make series of queries to POD
     var webQuery = function (expr, keyword, pichost, outpath, quick, queryDone) {
         // Do "waterfall" of queries to Mingle.io
         async.waterfall(
@@ -250,6 +250,7 @@ module.exports = function(pichost, outpath) {
             // End of series callback, write to file(s)
             function(err, products, companies) {
                 if(!err) {
+                    // Cache results in outdir and return after
                     console.log("Export completed successfully! Writing to files ...");
                     var productsPath = outpath + "/" + keyword + ".json";
                     var companiesPath = outpath + "/" + keyword + "-companies.json";
@@ -277,18 +278,23 @@ module.exports = function(pichost, outpath) {
                                 });
                             }
                         ],
+                        // Finally respond to original callback
                         function(err) {
                             if(!err) {
                                 console.log("Exported data written to files.");
                                 console.log("\tProducts: " + productsPath);
                                 console.log("\tCompanies: " + companiesPath);
+                            } else {
+                                console.log("WARNING: Error occurred when attempting to persist result to disk:" + err);
+                                // NOTE: Returns result anyway
+                            }
 
-                                if(queryDone) {
-                                    queryDone({
-                                        "products": products,
-                                        "companies": companies
-                                    });
-                                }
+                            if(queryDone) {
+                                var result = {
+                                    "products": products,
+                                    "companies": companies
+                                };
+                                queryDone(null, result);
                             }
                         });
                 } else {
@@ -298,9 +304,10 @@ module.exports = function(pichost, outpath) {
                             products: products,
                             companies: []
                         };
-                        if(queryDone) queryDone(products);
+                        if(queryDone) queryDone(null, result);
                     } else {
                         console.log("Aborted overall query operation due to fetal error: " + err.message);
+                        if(queryDone) queryDone(err);
                     }
                 }
             }
@@ -322,30 +329,53 @@ module.exports = function(pichost, outpath) {
         });
     };
 
-    var retrieveFromCache = function(keyword, cacheDir, callback) {
+    // Retrieve product and company information for a given keyword from cache
+    var retrieveFromCache = function(keyword, cacheDir, cbRetrieveDone) {
         var result = {};
-        var cacheFile = cacheDir + "/" + keyword + ".json";
-        fs.readFile(cacheFile, null, function(err, data) {
-            if(!err) {
-                result.products = JSON.parse(data);
-                callback(result);
-            } else {
-                console.log("Error reading data from cache file (" + cacheFile + ")");
+        var cacheFiles = [
+            { key: "products", path: cacheDir + "/" + keyword + ".json" },
+            { key: "companies", path: cacheDir + "/" + keyword + "-companies.json" }
+        ];
+        async.each(cacheFiles,
+            // Read each file
+            function(file, cbFileDone) {
+                fs.readFile(file.path, null, function(err, data) {
+                    if(!err) {
+                        result[file.key] = JSON.parse(data);
+                        cbFileDone();
+                    } else {
+                        console.log("Error reading data from cache file (" + cacheFile + ")");
+                        cbFileDone(err);
+                    }
+                });
+            },
+            // Return when all files have been read
+            function(err) {
+                if(!err) {
+                    cbRetrieveDone(null, result);
+                } else {
+                    console.log("Critical error occurred when retrieving data from cache, aborting:" + err);
+                    cbRetrieveDone(err);
+                }
             }
-        });
+        );
     };
 
+    // Make query, look first in cache and otherwise do web query
     var query = function(expr, keyword, pichost, outpath, quick, callback) {
         isInCache(keyword, outpath, function(err, cacheFile) {
             if(!err) {
                 if(cacheFile) {
-                    console.log("Cache hit!");
+                    console.log("Cache hit! Retrieving from cache");
                     retrieveFromCache(keyword, outpath, callback);
                 } else {
-                    webQuery(keyword, field, quick, callback);
+                    console.log("Not found in cache, doing web query...");
+                    webQuery(expr, keyword, pichost, outpath, quick, callback);
                 }
             } else {
                 console.log("Error checking outdir (" + outdir + ") for cached files");
+                console.log("Doing web query...");
+                webQuery(expr, keyword, pichost, outpath, quick, callback);
             }
         });
     };
