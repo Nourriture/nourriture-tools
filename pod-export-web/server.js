@@ -3,6 +3,7 @@
  */
 
 var express = require("express");
+var async = require("async");
 
 var app = express();
 app.use(express.static(__dirname + "/static")); 	// Static content
@@ -13,41 +14,50 @@ var pichost = "http://9la.dk/img/";
 var outdir = "../pod-export/output";
 var podExport = require("../pod-export/pod-export")(pichost, outdir);
 
-var exportFromPod = function(keyword, field, quick, callback) {
-    switch(field) {
-        case "category":
-            podExport.queryCategory(keyword, quick, callback);
-            break;
-        case "ename":
-            podExport.queryExactName(keyword, quick, callback);
-            break;
-        case "name":
-            podExport.queryName(keyword, quick, callback);
-            break;
-    }
-};
-
-//       /search/category/onions?quick=true
+// Search request
 app.get("/search/:field/:name", function(req, res) {
     console.log("Search request received!");
+
+    // Retrieve parameters
     var keyword = req.params["name"];
     var field = req.params["field"];
     var quick = false;
-
     if(req.query["quick"]) {
         quick = JSON.parse(req.query["quick"]);
     }
 
-    exportFromPod(keyword, field, quick, function(err, result) {
-        if(!err) {
+    async.waterfall([
+        // Make query
+        function(callback) {
+            switch(field) {
+                case "category":
+                    podExport.queryCategory(keyword, quick, callback);
+                    break;
+                case "ename":
+                    podExport.queryExactName(keyword, quick, callback);
+                    break;
+                case "name":
+                    podExport.queryName(keyword, quick, callback);
+                    break;
+            }
+        },
+        // Respond
+        function (result, callback) {
             res.set("Content-Type", "json/application");
             res.send(result);
-        } else {
-            res.status(500);
-            res.send({ message: "Failed to retrieve due to an internal error" });
+            callback(null, result);
         }
-        res.end();
-    });
+    ],
+        // Error handling / final callback
+        function(err/*, result*/) {
+            if(!err) {
+                res.end();
+            } else {
+                res.status(500);
+                res.send({ message: "Failed to retrieve due to an internal error" });
+            }
+        }
+    );
 });
 
 
