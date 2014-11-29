@@ -88,7 +88,7 @@ module.exports = function(pichost, outpath) {
                         // For each product, check if we have a picture
                         function(gtin, productDone) {
                             var group = gtin.substr(0, 3);
-                            var url = pichost + "gtin-" + group + "/" + gtin + ".jpg";
+                            var url = pichost + "product/gtin-" + group + "/" + gtin + ".jpg";
                             var req = http.get(url, function (res) {
                                 if(res.statusCode == 200) {
                                     imgCount = imgCount + 1;
@@ -216,6 +216,7 @@ module.exports = function(pichost, outpath) {
                                             var result = res[0];
                                             company.name = result["g.BRAND_NM"];
                                             company.website = result["g.BRAND_LINK"];
+                                            company.picture = pichost + "brand/" + company.bsin + ".jpg";
                                         } else {
                                             console.log("\tNo company meta-data found (BSIN: " + product.bsin + ")");
                                         }

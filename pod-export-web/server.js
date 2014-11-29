@@ -9,7 +9,7 @@ app.use(express.static(__dirname + "/static")); 	// Static content
 app.use(express.static(__dirname + "/node_modules/knockout/build/output"));
 app.use(express.static(__dirname + "/node_modules/jquery/dist"));
 
-var pichost = "http://9la.dk/img/product/";
+var pichost = "http://9la.dk/img/";
 var outdir = "../pod-export/output";
 var podExport = require("../pod-export/pod-export")(pichost, outdir);
 
@@ -35,7 +35,7 @@ app.get("/search/:field/:name", function(req, res) {
     var quick = false;
 
     if(req.query["quick"]) {
-        var quick = JSON.parse(req.query["quick"]);
+        quick = JSON.parse(req.query["quick"]);
     }
 
     exportFromPod(keyword, field, quick, function(err, result) {
