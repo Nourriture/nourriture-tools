@@ -7,6 +7,7 @@
 <body>
 <h1>POD Export Utility for Nourriture</h1>
 <div>
+    <strong>Search</strong>
     <div>
         <div>
             <p>
@@ -26,6 +27,19 @@
                 <span>Category</span>
             </p>
         </div>
+    </div>
+    <div>
+        <strong>Replace</strong>
+        <p>
+            <span>Calories</span>
+            <input name="calories" data-bind="value: replaceFields.calories"/>
+            <span>Carbs</span>
+            <input name="calories" data-bind="value: replaceFields.carbs"/>
+            <span>Proteins</span>
+            <input name="calories" data-bind="value: replaceFields.protein"/>
+            <span>Fat</span>
+            <input name="calories" data-bind="value: replaceFields.fat"/>
+        </p>
     </div>
     <hr />
     <div>
@@ -55,10 +69,35 @@
                         <td data-bind="text: $data.name"></td>
                         <td data-bind="text: $data.category"></td>
                         <td data-bind="text: $data.bsin"></td>
+
+                        <!-- ko if: $parent.replaceFields.calories == null -->
                         <td data-bind="text: $data.calories"></td>
+                        <!-- /ko -->
+                        <!-- ko if: $parent.replaceFields.calories -->
+                        <td data-bind="text: $parent.replaceFields.calories"></td>
+                        <!-- /ko -->
+
+                        <!-- ko if: $parent.replaceFields.carbs == null -->
                         <td data-bind="text: $data.carbs"></td>
+                        <!-- /ko -->
+                        <!-- ko if: $parent.replaceFields.carbs -->
+                        <td data-bind="text: $parent.replaceFields.carbs"></td>
+                        <!-- /ko -->
+
+                        <!-- ko if: $parent.replaceFields.protein == null -->
                         <td data-bind="text: $data.protein"></td>
+                        <!-- /ko -->
+                        <!-- ko if: $parent.replaceFields.protein -->
+                        <td data-bind="text: $parent.replaceFields.protein"></td>
+                        <!-- /ko -->
+
+                        <!-- ko if: $parent.replaceFields.fat == null -->
                         <td data-bind="text: $data.fat"></td>
+                        <!-- /ko -->
+                        <!-- ko if: $parent.replaceFields.fat -->
+                        <td data-bind="text: $parent.replaceFields.fat"></td>
+                        <!-- /ko -->
+
                         <td>
                             <a data-bind="click: $parent.copyItemToClipboard" href="" class="json-link-button">Show JSON</a>
                         </td>

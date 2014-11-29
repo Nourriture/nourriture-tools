@@ -9,6 +9,9 @@ function MainViewModel() {
     self.searchResultsCompanies = ko.observableArray([{"bsin":"8RB56Z","name":"Washington Fruit & Produce Co.","website":"http://www.washfruit.com"}]);
     self.searchField = ko.observable("name");
     self.quickModeEnabled = ko.observable(false);
+    self.replaceFields = ko.observable({calories: null, carbs: null, protein: null, fat: null});
+
+    // UI
     self.searching = ko.observable(false);
 
     // Behaviours
