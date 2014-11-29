@@ -14,9 +14,9 @@ var async =     require("async");
 var _ =         require("lodash");
 
 
-module.exports = function(pichost, outpath) {
+module.exports = function (pichost, outpath) {
     // Utility function for making queries to Mingle.io and returning the result as JSON
-    var mingleQuery = function(query, callback) {
+    var mingleQuery = function (query, callback) {
         var options = {
             host: "data.mingle.io",
             method: "POST",
@@ -24,7 +24,7 @@ module.exports = function(pichost, outpath) {
         };
 
         var req = https.request(options, function (res) {
-            if(res.statusCode == 200) {
+            if (res.statusCode == 200) {
                 res.setEncoding('utf8');
                 res.on('data', function (data) {
                     var result = null;
@@ -47,7 +47,7 @@ module.exports = function(pichost, outpath) {
             }
         });
 
-        req.on('error', function(err) {
+        req.on('error', function (err) {
             callback(err);
         });
 
@@ -61,54 +61,54 @@ module.exports = function(pichost, outpath) {
         async.waterfall(
             [
                 // Get products with specific product line
-                function(callback){
+                function (callback) {
                     mingleQuery({
                             expr: expr,
                             limit: 100
                         },
-                        function(err, res) {
-                            if(!err) {
+                        function (err, res) {
+                            if (!err) {
                                 console.log("Relevant product IDs retrieved (" + res.length + " products)");
-                                if(!quick) {
+                                if (!quick) {
                                     callback(null, res);
                                 } else {
                                     callback(new Error("LOOKUP"), res);
                                 }
                             } else {
-                                callback(Error('Problem with basic product query: ' + err.message));
+                                callback(new Error('Problem with basic product query: ' + err.message));
                             }
                         }
                     );
                 },
                 // Filter to only products with picture
-                function(products, callback) {
+                function (products, callback) {
                     var imgProducts = [];
                     var imgCount = 0;
                     async.each(products,
                         // For each product, check if we have a picture
-                        function(gtin, productDone) {
+                        function (gtin, productDone) {
                             var group = gtin.substr(0, 3);
                             var url = pichost + "product/gtin-" + group + "/" + gtin + ".jpg";
                             var req = http.get(url, function (res) {
-                                if(res.statusCode == 200) {
+                                if (res.statusCode == 200) {
                                     imgCount = imgCount + 1;
-                                    imgProducts.push({ gtin: gtin, picture:url});
+                                    imgProducts.push({ gtin: gtin, picture: url});
                                 } else {
                                     //imgProducts.push({ gtin: gtin, picture:null});
                                     console.log("\tNo image found for product (GTIN: " + gtin + ") discarding.");
                                 }
-                                productDone()
+                                productDone();
                             });
                             req.on('socket', function (socket) {
                                 socket.setTimeout(2000);
-                                socket.on('timeout', function() {
+                                socket.on('timeout', function () {
                                     req.abort();
                                 });
                             });
                         },
                         // When done, or error
-                        function(err) {
-                            if(!err) {
+                        function (err) {
+                            if (!err) {
                                 console.log("Images retrieved for " + imgCount + " out of " + imgProducts.length + " products");
                                 callback(null, imgProducts);
                             } else {
@@ -118,18 +118,18 @@ module.exports = function(pichost, outpath) {
                     );
                 },
                 // Retrieve nutritional data
-                function(products, callback) {
+                function (products, callback) {
                     var nutCount = 0;
                     async.each(products,
                         // For each product, retrieve relevant nutritional information
-                        function(product, productDone) {
+                        function (product, productDone) {
                             mingleQuery({
                                     expr: '[ {n.CAL, n.TOT_CARB_G, n.PROTEIN_G, n.TOT_FAT_G} | n <~ pod.nutrition_us, n.GTIN_CD =~ "' + product.gtin + '" ]',
                                     limit: 1
                                 },
-                                function(err, res) {
-                                    if(!err) {
-                                        if(res.length > 0){
+                                function (err, res) {
+                                    if (!err) {
+                                        if (res.length > 0) {
                                             nutCount = nutCount + 1;
                                             var result = res[0];
                                             product.calories =  result["n.CAL"];
@@ -151,8 +151,8 @@ module.exports = function(pichost, outpath) {
                             );
                         },
                         // When done (..or error)
-                        function(err) {
-                            if(!err) {
+                        function (err) {
+                            if (!err) {
                                 console.log("Nutritional information retrieved for " + nutCount + " out of " + products.length + " products");
                                 callback(null, products);
                             } else {
@@ -162,10 +162,10 @@ module.exports = function(pichost, outpath) {
                     );
                 },
                 // Retrieve meta-data (Name, category and companyID)
-                function(products, callback) {
+                function (products, callback) {
                     async.each(products,
                         // For each product, retrieve detailed meta-data
-                        function(product, productDone) {
+                        function (product, productDone) {
                             mingleQuery({
                                     expr: '[ {g.PRODUCT_LINE, g.BSIN, g.GTIN_NM} | g <~ pod.gtin, g.GTIN_CD =~ "' + product.gtin + '" ]',
                                     limit: 1
@@ -329,7 +329,7 @@ module.exports = function(pichost, outpath) {
                         result[file.key] = JSON.parse(data);
                         cbFileDone();
                     } else {
-                        console.log("Error reading data from cache file (" + cacheFile + ")");
+                        console.log("Error reading data from cache file (" + file.path + ")");
                         cbFileDone(err);
                     }
                 });
@@ -358,7 +358,7 @@ module.exports = function(pichost, outpath) {
                     webQuery(expr, keyword, pichost, outpath, quick, callback);
                 }
             } else {
-                console.log("Error checking outdir (" + outdir + ") for cached files");
+                console.log("Error checking outdir (" + outpath + ") for cached files");
                 console.log("Doing web query...");
                 webQuery(expr, keyword, pichost, outpath, quick, callback);
             }
