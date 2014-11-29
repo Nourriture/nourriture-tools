@@ -11,19 +11,19 @@
     <div>
         <div>
             <p>
-                <input name="search" data-bind="value: searchTerm"/>
+                <input title="Search" name="search" data-bind="value: searchTerm"/>
                 <input type="submit" value="Search" data-bind="click: search" />
-                <input type="checkbox" data-bind="checked: quickModeEnabled" />
+                <input title="Quick" type="checkbox" data-bind="checked: quickModeEnabled" />
                 <span>Quick</span>
             </p>
         </div>
         <div>
             <p>
-                <input type="radio" value="name" data-bind="checked: searchField" />
+                <input title="Name contains" type="radio" value="name" data-bind="checked: searchField" />
                 <span>Name contains</span>
-                <input type="radio" value="ename" data-bind="checked: searchField" />
+                <input title="Name exact" type="radio" value="ename" data-bind="checked: searchField" />
                 <span>Name exact</span>
-                <input type="radio" value="category" data-bind="checked: searchField"  />
+                <input title="Category" type="radio" value="category" data-bind="checked: searchField"  />
                 <span>Category</span>
             </p>
         </div>
@@ -32,13 +32,13 @@
         <strong>Replace</strong>
         <p>
             <span>Calories</span>
-            <input name="calories" data-bind="value: replaceFields.calories"/>
+            <input title="Calories" name="calories" data-bind="value: replaceFields.calories"/>
             <span>Carbs</span>
-            <input name="calories" data-bind="value: replaceFields.carbs"/>
-            <span>Proteins</span>
-            <input name="calories" data-bind="value: replaceFields.protein"/>
+            <input title="Carbs" name="carbs" data-bind="value: replaceFields.carbs"/>
+            <span>Protein</span>
+            <input title="Protein" name="protein" data-bind="value: replaceFields.protein"/>
             <span>Fat</span>
-            <input name="calories" data-bind="value: replaceFields.fat"/>
+            <input title="Fat" name="fat" data-bind="value: replaceFields.fat"/>
         </p>
     </div>
     <hr />
